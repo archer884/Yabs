@@ -9,12 +9,31 @@ mod metadata;
 mod workingdirectory;
 
 fn main() {
-    println!("Hello, world! ! !");
+	let mut args = std::env::args();
+	match args.nth(1) {
+		Some(option) => dispatch_option(&option),
+		None => println!("No option")
+	}
+}
 
-   let json_path = Path::new("metadata.json");
+fn dispatch_option(option: &str) {
+	match option {
+		"new" => new_repo(),
+		"commit" => commit(),
+		_ => println!("Unknown option {}", option)
+	}
+}
+
+fn new_repo() {
+	println!("Creation of a new repo");
+	let json_path = Path::new("metadata.json");
 	metadata::create_emty_metadata_file(json_path);
+}
 
+fn commit() {
 	let data_path = Path::new("data");
+	let json_path = Path::new("metadata.json");
+
 	let wd_hierarchy = workingdirectory::read_working_directory(data_path);
 
 	let mt_hierarchy = metadata::read_metadata_file(json_path);
