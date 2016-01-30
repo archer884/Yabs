@@ -1,0 +1,10 @@
+[package]
+name = "yabs"
+version = "0.1.0"
+authors = ["GGYE <ggye@free.Fr>"]
+
+[dependencies]
+
+filetime="0.1.9"
+rustc-serialize = "0.3"
+
