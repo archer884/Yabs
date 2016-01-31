@@ -1,5 +1,6 @@
 extern crate filetime;
 extern crate rustc_serialize;
+extern crate crypto;
 
 use std::path::Path;
 use std::collections::HashMap;
@@ -7,6 +8,7 @@ use std::collections::HashMap;
 
 mod metadata;
 mod workingdirectory;
+mod store;
 
 fn main() {
 	let mut args = std::env::args();
@@ -44,7 +46,11 @@ fn commit() {
 
 	let files_to_commit = files_to_commit(wd_hierarchy, mt_hierarchy);
 
-	println!("Files to commit {:?}", files_to_commit);	
+	println!("Files to commit {:?}", files_to_commit);
+
+	for filename in files_to_commit {
+		store::store_file(Path::new(&filename));
+	}	
 }
 
 fn files_to_commit(wd_hierarchy: HashMap<String, model::MetaData>, mt_hierarchy: model::Hierarchy) -> Vec<String>  {
