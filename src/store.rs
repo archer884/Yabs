@@ -23,6 +23,17 @@ pub fn store_file(store_path: &Path, source_file: &Path) -> String {
 	hash
 }
 
+pub fn extract_file(store_path: &Path, hash: &String, data_path: &Path, filename: &String, timestamp: u64) {
+	let file_in_store = store_path.join(hash);
+	let file_in_wd = Path::new(filename);
+	let tmp_path = data_path.join("tmp");
+
+	println!("Extract from {} to {} ", file_in_store.to_str().unwrap(), file_in_wd.to_str().unwrap());
+
+	fs::copy(&file_in_store, &tmp_path);
+	fs::rename(&tmp_path, &file_in_wd);	
+}
+
 fn hash(file: &Path) -> String {
 	let mut f = File::open(&file).unwrap();
 	let mut reader = BufReader::new(f);

@@ -34,8 +34,50 @@ fn new_repo() {
 }
 
 fn update() {
-	println!("Work in progress");
+	let data_path = Path::new("data");
+	let json_path = Path::new("metadata.json");
+	let store_path = Path::new("store");
+
+	let wd_hierarchy : HashMap<String, model::MetaData> = workingdirectory::read_working_directory(data_path);
+	println!("{} files in the working directory", wd_hierarchy.len());
+
+	let mt_hierarchy = metadata::read_metadata_file(json_path);
+	println!("{} files in the metadata", mt_hierarchy.get_number_of_files());
+
+	let file_top_update = files_to_update(wd_hierarchy, &mt_hierarchy);
+
+	for (filename, metadata) in file_top_update.iter() {
+		store::extract_file(store_path, &metadata.get_hash(), data_path, filename, metadata.get_timestamp());
+	}
+
 }
+
+fn files_to_update(wd_hierarchy: HashMap<String, model::MetaData>, mt_hierarchy: &model::Hierarchy) -> HashMap<String, model::MetaData>  {
+	let mut file_to_update : HashMap<String, model::MetaData> = HashMap::new();
+
+	for (filename, metadataset) in mt_hierarchy.get_files().iter() {
+		let wd_metadata = wd_hierarchy.get(filename);
+
+		match wd_metadata {
+			Some(x) => {
+				println!("- Need to do something with {}", filename);
+				//if(x.is_more_recent(&metadata)) {
+				//	println!("- File to update {}", filename);
+				//	files_to_commit.insert(filename.clone(), metadata.clone());	
+				//} else {
+				//	println!("- No need to update {}", filename);
+				//}
+			    ()},
+			None => {
+				println!("- New file to update {}", filename);
+			    file_to_update.insert(filename.clone(), metadataset.get_last().unwrap().clone());
+			    () }
+		}
+	}
+
+	file_to_update	
+}
+
 
 fn commit() {
 	let data_path = Path::new("data");
@@ -155,6 +197,10 @@ mod model {
 				None => true
 			}
 		}
+
+		pub fn get_files(&self) -> &HashMap<String, MetaDataSet> {
+			&self.files
+		}
 	}
 
 	impl MetaDataSet {
@@ -180,6 +226,12 @@ mod model {
 		}
 		pub fn is_more_recent(&self, other: &MetaData) -> bool {
 			self.timestamp < other.timestamp
+		}
+		pub fn get_timestamp(&self) -> u64 {
+			self.timestamp
+		}
+		pub fn get_hash(&self) -> String {
+			self.hash.clone()
 		}	
 	}
 
