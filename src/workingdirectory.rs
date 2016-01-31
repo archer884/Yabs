@@ -35,7 +35,7 @@ fn read_folder_rec(root: &Path, hierarchy: &mut HashMap<String, MetaData>) {
 
 			let lastChange = FileTime::from_last_modification_time(&info).seconds_relative_to_1970();
 
-			println!("{:?} - {:?} - {:?}", file_name_as_string, info.len(), lastChange);
+	//		println!("{:?} - {:?} - {:?}", file_name_as_string, info.len(), lastChange);
 
 			let metadata = MetaData::new_without_hash(lastChange, info.len());
 

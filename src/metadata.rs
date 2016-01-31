@@ -31,8 +31,8 @@ pub fn create_emty_metadata_file<P: AsRef<Path>>(path: P) {
 }
 
 pub fn read_metadata_file<P: AsRef<Path>>(path: P) -> Hierarchy {
-	println!("Reading metadata file from {}", path.as_ref().to_str().unwrap());  
-
+//	println!("Reading metadata file from {}", path.as_ref().to_str().unwrap());  
+ 
 	let mut file = File::open(&path).unwrap();
 	let mut json = String::new();
     file.read_to_string(&mut json);

@@ -21,6 +21,7 @@ fn main() {
 fn dispatch_option(option: &str) {
 	match option {
 		"new" => new_repo(),
+		"update" => update(),
 		"commit" => commit(),
 		_ => println!("Unknown option {}", option)
 	}
@@ -32,32 +33,34 @@ fn new_repo() {
 	metadata::create_emty_metadata_file(json_path);
 }
 
+fn update() {
+	println!("Work in progress");
+}
+
 fn commit() {
 	let data_path = Path::new("data");
 	let json_path = Path::new("metadata.json");
+	let store_path = Path::new("store");
 
-	let wd_hierarchy = workingdirectory::read_working_directory(data_path);
+	let wd_hierarchy : HashMap<String, model::MetaData> = workingdirectory::read_working_directory(data_path);
+	println!("{} files in the working directory", wd_hierarchy.len());
 
 	let mt_hierarchy = metadata::read_metadata_file(json_path);
-
-	println!("{:?}", mt_hierarchy);
-
-	println!("Finding files to commit");
+	println!("{} files in the metadata", mt_hierarchy.get_number_of_files());
 
 	let files_to_commit = files_to_commit(wd_hierarchy, &mt_hierarchy);
-
-	println!("Files to commit {:?}", &files_to_commit);
+	println!("{} files to commit", files_to_commit.len());
 
 	let mut updated_metadata : HashMap<String, model::MetaData> = HashMap::new();
 	for (filename, mut metadata) in files_to_commit {
-		let hash = store::store_file(Path::new(&filename));
+		let hash = store::store_file(store_path, Path::new(&filename));
 		metadata.add_hash(hash);
 
 		updated_metadata.insert(filename, metadata);
 	}	
 	let updated_metadata = updated_metadata;
 
-	println!("Updated metadata {:?}", &updated_metadata);
+//	println!("Updated metadata {:?}", &updated_metadata);
 
 	let mut mt_hierarchy = mt_hierarchy;
 	mt_hierarchy.update(updated_metadata);
@@ -70,17 +73,21 @@ fn files_to_commit(wd_hierarchy: HashMap<String, model::MetaData>, mt_hierarchy:
 
 	for (filename, metadata) in wd_hierarchy.iter() {
 		let actual_metadata = mt_hierarchy.get_latest_meta_data(&filename);
-		println!("actual metadata {:?}", actual_metadata);
+	//	println!("actual metadata {:?}", actual_metadata);
 
 		match actual_metadata {
 			Some(x) => {
 				if(x.is_more_recent(&metadata)) {
+					println!("- File to update {}", filename);
 					files_to_commit.insert(filename.clone(), metadata.clone());	
 				} else {
-					println!("No need to update {}", filename);
+					println!("- No need to update {}", filename);
 				}
-			 ()},
-			None => { files_to_commit.insert(filename.clone(), metadata.clone()); () }
+			    ()},
+			None => {
+				println!("- New file {}", filename);
+			    files_to_commit.insert(filename.clone(), metadata.clone());
+			    () }
 		}
 	}
 
@@ -114,6 +121,9 @@ mod model {
 		pub fn new_empty() -> Hierarchy {
 			let empty_hierarchy_map : HashMap<String, MetaDataSet> = HashMap::new();
 			Hierarchy {nb_revision: 1, files: empty_hierarchy_map}
+		}
+		pub fn get_number_of_files(&self) -> usize {
+			self.files.len()
 		}	
 		pub fn get_latest_meta_data(&self, filename: &String) -> Option<&MetaData> {
 			match self.files.get(filename) {

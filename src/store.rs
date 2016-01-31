@@ -9,9 +9,7 @@ use std::io::Read;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 
-pub fn store_file(source_file: &Path) -> String {
-	let store_path = Path::new("store");
-
+pub fn store_file(store_path: &Path, source_file: &Path) -> String {
 	let tmp_path = store_path.join("tmp");
 
 	fs::copy(&source_file, &tmp_path);
@@ -45,6 +43,6 @@ fn hash(file: &Path) -> String {
 	}
 
 	let hex = hasher.result_str();
-	println!("Hash: {:?}", hex);
+//	println!("Hash: {:?}", hex);
 	hex
 }
