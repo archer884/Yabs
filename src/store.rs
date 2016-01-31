@@ -9,21 +9,23 @@ use std::io::Read;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 
-pub fn store_file(source_file: &Path) {
+pub fn store_file(source_file: &Path) -> String {
 	let store_path = Path::new("store");
 
 	let tmp_path = store_path.join("tmp");
 
 	fs::copy(&source_file, &tmp_path);
 
-	hash(&source_file);
+	let hash = hash(&source_file);
 
-	let final_path = store_path.join("final");
+	let final_path = store_path.join(&hash);
 
 	fs::rename(&tmp_path, &final_path);
+
+	hash
 }
 
-fn hash(file: &Path) {
+fn hash(file: &Path) -> String {
 	let mut f = File::open(&file).unwrap();
 	let mut reader = BufReader::new(f);
 	let mut buffer = [0; 512];
@@ -44,4 +46,5 @@ fn hash(file: &Path) {
 
 	let hex = hasher.result_str();
 	println!("Hash: {:?}", hex);
+	hex
 }

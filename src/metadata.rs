@@ -30,7 +30,7 @@ pub fn create_emty_metadata_file<P: AsRef<Path>>(path: P) {
     file.sync_all();
 }
 
-pub fn read_metadata_file<P: AsRef<Path>>(path: P) -> Hierarchy{
+pub fn read_metadata_file<P: AsRef<Path>>(path: P) -> Hierarchy {
 	println!("Reading metadata file from {}", path.as_ref().to_str().unwrap());  
 
 	let mut file = File::open(&path).unwrap();
@@ -39,5 +39,15 @@ pub fn read_metadata_file<P: AsRef<Path>>(path: P) -> Hierarchy{
 
     let hierarchy: Hierarchy = json::decode(&json).unwrap();
     hierarchy
+}
+
+pub fn write_metadata_file<P: AsRef<Path>>(path: P, hierarchy: Hierarchy) {
+	let jsonHierarchy = json::encode(&hierarchy).unwrap();
+    let u8_vec = jsonHierarchy.into_bytes();
+	let u8_slice = &u8_vec[..];
+
+	let mut file = File::create(&path).unwrap();
+    file.write_all(u8_slice);
+    file.sync_all();
 }
 
