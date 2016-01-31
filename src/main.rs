@@ -35,7 +35,6 @@ fn new_repo() {
 fn commit() {
 	let data_path = Path::new("data");
 	let json_path = Path::new("metadata.json");
-	let json_path2 = Path::new("metadata2.json");
 
 	let wd_hierarchy = workingdirectory::read_working_directory(data_path);
 
@@ -63,7 +62,7 @@ fn commit() {
 	let mut mt_hierarchy = mt_hierarchy;
 	mt_hierarchy.update(updated_metadata);
 
-	metadata::write_metadata_file(json_path2, mt_hierarchy);
+	metadata::write_metadata_file(json_path, mt_hierarchy);
 }
 
 fn files_to_commit(wd_hierarchy: HashMap<String, model::MetaData>, mt_hierarchy: &model::Hierarchy) -> HashMap<String, model::MetaData>  {
@@ -74,12 +73,16 @@ fn files_to_commit(wd_hierarchy: HashMap<String, model::MetaData>, mt_hierarchy:
 		println!("actual metadata {:?}", actual_metadata);
 
 		match actual_metadata {
-			Some(x) => (),
+			Some(x) => {
+				if(x.is_more_recent(&metadata)) {
+					files_to_commit.insert(filename.clone(), metadata.clone());	
+				} else {
+					println!("No need to update {}", filename);
+				}
+			 ()},
 			None => { files_to_commit.insert(filename.clone(), metadata.clone()); () }
 		}
-	    //files_to_commit.push(filename.clone());
 	}
-
 
 	files_to_commit
 }
@@ -128,7 +131,8 @@ mod model {
 				if(new_metadata) {
 					self.files.insert(filename, MetaDataSet::new_simple_meta_data_set(metadata));
 				} else {
-
+					let mut m = self.files.get_mut(&filename).unwrap();
+					m.add_revision(metadata);
 				}
 			}
 		}
@@ -152,15 +156,20 @@ mod model {
 			v.push(m);
 			MetaDataSet {metadata: v }
 		}
+		pub fn add_revision(&mut self, m: MetaData) {
+			self.metadata.push(m);
+		}
 	}
 
 	impl MetaData {
 		pub fn new_without_hash(timestamp: u64, size: u64) -> MetaData {
 			MetaData {timestamp: timestamp, size: size, hash: "".to_string(), stored_hash: "".to_string()}
 		}
-
 		pub fn add_hash(&mut self, hash: String) {
 			self.hash = hash;
+		}
+		pub fn is_more_recent(&self, other: &MetaData) -> bool {
+			self.timestamp < other.timestamp
 		}	
 	}
 
