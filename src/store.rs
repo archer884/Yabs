@@ -3,6 +3,8 @@ use std::path::Path;
 use std::fs;
 use std::fs::File;
 use std::io::BufReader;
+use filetime::FileTime;
+use filetime;
 
 use std::io::Read;
 
@@ -32,6 +34,9 @@ pub fn extract_file(store_path: &Path, hash: &String, data_path: &Path, filename
 
 	fs::copy(&file_in_store, &tmp_path);
 	fs::rename(&tmp_path, &file_in_wd);	
+
+	let seconds_since_1970 = FileTime::from_seconds_since_1970(timestamp, 0);
+	filetime::set_file_times(&file_in_wd, seconds_since_1970, seconds_since_1970);
 }
 
 fn hash(file: &Path) -> String {
