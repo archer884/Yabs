@@ -1,4 +1,3 @@
-use std::path;
 use std::path::Path;
 use std::fs;
 use std::fs::File;
@@ -11,54 +10,47 @@ use std::io::Read;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 
-pub fn store_file(store_path: &Path, source_file: &Path) -> String {
-	let tmp_path = store_path.join("tmp");
-
+#[allow(unused)]
+pub fn store_file<P1, P2>(store_path: P1, source_file: P2) -> String
+	where P1: AsRef<Path>,
+		  P2: AsRef<Path>,
+{
+	let tmp_path = store_path.as_ref().join("tmp");
 	fs::copy(&source_file, &tmp_path);
 
 	let hash = hash(&source_file);
-
-	let final_path = store_path.join(&hash);
+	let final_path = store_path.as_ref().join(&hash);
 
 	fs::rename(&tmp_path, &final_path);
-
 	hash
 }
 
-pub fn extract_file(store_path: &Path, hash: &String, data_path: &Path, filename: &String, timestamp: u64) {
-	let file_in_store = store_path.join(hash);
-	let file_in_wd = Path::new(filename);
-	let tmp_path = data_path.join("tmp");
+#[allow(unused)]
+pub fn extract_file<P1, P2>(store_path: P1, hash: &str, data_path: P2, filename: &str, timestamp: u64)
+	where P1: AsRef<Path>,
+		  P2: AsRef<Path>,
+{
+	let file_in_store = store_path.as_ref().join(hash);
+	let tmp_path = data_path.as_ref().join("tmp");
 
-	println!("Extract from {} to {} ", file_in_store.to_str().unwrap(), file_in_wd.to_str().unwrap());
+	println!("Extract from {} to {} ", file_in_store.to_str().unwrap(), filename);
 
 	fs::copy(&file_in_store, &tmp_path);
-	fs::rename(&tmp_path, &file_in_wd);	
+	fs::rename(&tmp_path, filename);
 
 	let seconds_since_1970 = FileTime::from_seconds_since_1970(timestamp, 0);
-	filetime::set_file_times(&file_in_wd, seconds_since_1970, seconds_since_1970);
+	filetime::set_file_times(filename, seconds_since_1970, seconds_since_1970);
 }
 
-fn hash(file: &Path) -> String {
-	let mut f = File::open(&file).unwrap();
+fn hash<P: AsRef<Path>>(file: P) -> String {
+	let f = File::open(file).unwrap();
 	let mut reader = BufReader::new(f);
 	let mut buffer = [0; 512];
 
 	let mut hasher = Sha256::new();
-
-	loop {
-		let bytesRead = reader.read(&mut buffer).unwrap();
-		if bytesRead == 512 {
-			hasher.input(&buffer);
-		} else {
-			let v : Vec<u8> = buffer.iter().cloned().collect();
-			let (x, y) = v.split_at(bytesRead);
-			hasher.input(x);
-		}
-		if bytesRead == 0 { break; }
+	while let Ok(bytes_read) = reader.read(&mut buffer) {
+		if bytes_read == 0 { break; }
+		hasher.input(&buffer[0..bytes_read]);
 	}
-
-	let hex = hasher.result_str();
-//	println!("Hash: {:?}", hex);
-	hex
+	hasher.result_str()
 }
